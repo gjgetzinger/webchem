@@ -4,10 +4,9 @@
 \alias{biotransformer}
 \title{BioTransformer}
 \usage{
-biotransformer(jar = NULL, annotate = FALSE, btType = c("ecbased",
-  "cyp450", "phaseII", "hgut", "superbio", "allHuman", "envimicro"),
-  ismiles = NULL, task = c("pred", "cid"), formulas = NULL,
-  masses = NULL, nsteps = 1, mTolerence = 0.01)
+biotransformer(jar = NULL, annotate = FALSE, btType = NULL,
+  ismiles = NULL, task = NULL, formulas = NULL, masses = NULL,
+  nsteps = 1, mTolerence = 0.01)
 }
 \arguments{
 \item{jar}{Path to the biotransformer jar file}
@@ -15,11 +14,9 @@ biotransformer(jar = NULL, annotate = FALSE, btType = c("ecbased",
 \item{annotate}{(T/F) Search PuChem for each product, and store with CID and
 synonyms, when available.}
 
-\item{btType}{The type of description: Type of biotransformer - EC-based
-(ecbased), CYP450 (cyp450), PhaseII (phaseII), Human gut microbial (hgut),
-human super transformer (superbio, or allHuman), Environmental
-microbial(envimicro).If option -m is enabled, the only valid biotransformer
-types are allHuman, superbio and env.}
+\item{btType}{The type of description: Type of biotransformer
+human super transformer (`superbio`, or `allHuman`), Environmental
+microbial(`env`).}
 
 \item{ismiles}{The input, which can be a SMILES string}
 
@@ -36,6 +33,9 @@ biotransformers. The default value is 1.}
 
 \item{mTolerence}{Mass tolerance for metabolite identification (default is
 0.01).}
+}
+\value{
+A tibble containing predicted metabolite data
 }
 \description{
 BioTransformer is a software

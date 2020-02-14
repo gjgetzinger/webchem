@@ -15,11 +15,9 @@
 #' @param jar Path to the biotransformer jar file
 #' @param annotate (T/F) Search PuChem for each product, and store with CID and
 #'   synonyms, when available.
-#' @param btType The type of description: Type of biotransformer - EC-based
-#'   (ecbased), CYP450 (cyp450), PhaseII (phaseII), Human gut microbial (hgut),
-#'   human super transformer (superbio, or allHuman), Environmental
-#'   microbial(envimicro).If option -m is enabled, the only valid biotransformer
-#'   types are allHuman, superbio and env.
+#' @param btType The type of description: Type of biotransformer
+#'   human super transformer (`superbio`, or `allHuman`), Environmental
+#'   microbial(`env`).
 #' @param formulas Semicolon-separated list of formulas of compounds to identify
 #' @param ismiles The input, which can be a SMILES string
 #' @param task The task to be permed: pred for prediction, or cid for compound
@@ -31,17 +29,15 @@
 #' @param mTolerence Mass tolerance for metabolite identification (default is
 #'   0.01).
 #'
-#' @return
+#' @return A tibble containing predicted metabolite data
 #' @export
 #'
 biotransformer <-
   function(jar = NULL,
            annotate = FALSE,
-           btType = c('superbio',
-                      'allHuman',
-                      'envimicro'),
+           btType = NULL,
            ismiles = NULL,
-           task = c('pred', 'cid'),
+           task = NULL,
            formulas = NULL,
            masses = NULL,
            nsteps = 1,
@@ -49,6 +45,12 @@ biotransformer <-
     # Check input arguments
     if (is.null(ismiles)) {
       stop('No input SMILES string provided')
+    }
+    if(is.null(task) | !any(task %in% c('pred', 'cid'))){
+      stop('tak must be either pred or cid')
+    }
+    if(is.null(btType) | !any(btType %in% c('env', 'allHuman', 'superbio'))){
+      stop('btType must be one of: env, allHuman or superbio')
     }
     if(task == 'cid' & all(is.null(c(masses, formulas)))){
       stop('Must provide masses or formulas when task = cid')
