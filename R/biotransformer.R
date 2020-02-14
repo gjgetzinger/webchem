@@ -86,7 +86,7 @@ biotransformer <-
                          stdout = T)
       if (any(grepl('Successfully completed metabolism', std_out))) {
         message(paste0(std_out, '\n'))
-        rst <- readr::read_csv(file = csvoutput)
+        rst <- readr::read_csv(file = csvoutput, col_types = "ccccicdddddccccccccccdd")
       } else {
         stop(paste0('Biotransformer failed for input: ', ismiles, sep = ''))
       }
