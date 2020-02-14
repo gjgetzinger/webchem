@@ -64,7 +64,7 @@ biotransformer <-
       jar <- normalizePath(path = jar, mustWork = T)
       csvoutput <- tempfile(pattern = 'file')
       on.exit(unlink(csvoutput))
-      args <- paste(
+      arguments <- paste(
         '-jar',
         jar,
         '-k',
