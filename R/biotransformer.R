@@ -55,18 +55,48 @@ biotransformer <-
     if(task == 'cid' & all(is.null(c(masses, formulas)))){
       stop('Must provide masses or formulas when task = cid')
     }
+    if(length(ismiles)>1){
+      stop('Multiple SMILES strings input, only single queries currenty supported.')
+    }
     if (is.null(jar)) {
       # TODO add REST API interface
       stop('REST API interface not yet implemented, must use properly installed jar file.')
+      task_type <- switch(task, pred = 'PREDICTION', cid = 'IDENTIFICATION')
+      biotransformer_option <- switch(btType, env ='ENVMICRO', allHuman = 'ALLHUMAN', superbio = 'SUPERBIO')
+      query_input <- paste0('x\t', ismiles)
+      url <- 'http://biotransformer.ca/queries.json'
+      headers <- c('Content-Type' = 'json', Accept = 'json')
+      body <- jsonlite::toJSON(list(
+        biotransformer_option = biotransformer_option,
+        number_of_steps = nsteps,
+        query_input = query_input,
+        task_type = task_type
+      ), auto_unbox = T)
+
+      postres <- httr::POST(url = url,
+                  httr::add_headers(headers = headers),
+                  body = body)
+
+      query_id <- jsonlite::fromJSON(rawToChar(postres$content))$queryId
+      getstatus <- httr::GET(
+        url = paste0(
+          "https://api.rsc.org/compounds/v1/filter/",
+          query_id, "/status"
+        ),
+        httr::add_headers(.headers = headers)
+      )
+      cont_txt <- content(cont, type = 'text', encoding = 'UTF-8')
+
     } else {
       jar <- normalizePath(path = jar, mustWork = T)
-      csvoutput <- paste0(tempfile(pattern = 'file'), '.csv')
+      csvoutput <- tempfile(tmpdir = getwd(), fileext = '.csv')
+
       arguments <- paste(
         '-jar',jar,
         '-k',task,
         '-b',btType,
         '-ismi',
-        paste0('"', ismiles, '"'),
+        shQuote(string = ismiles),
         '-ocsv',csvoutput,
         '-s',nsteps
       )
@@ -82,14 +112,14 @@ biotransformer <-
         arguments <- paste(arguments, '-a')
       }
       std_out <- system2(command = 'java',
-                         args = arguments,
-                         stdout = T)
+                         args = arguments, stdout = T)
+      on.exit(file.remove(csvoutput))
       if (any(grepl('Successfully completed metabolism', std_out))) {
-        message(paste0(std_out, '\n'))
         rst <- readr::read_csv(file = csvoutput, col_types = "ccccicdddddccccccccccdd")
       } else {
         stop(paste0('Biotransformer failed for input: ', ismiles, sep = ''))
       }
     }
+
   return(rst)
   }
