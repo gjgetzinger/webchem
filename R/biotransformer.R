@@ -37,11 +37,7 @@
 biotransformer <-
   function(jar = NULL,
            annotate = FALSE,
-           btType = c('ecbased',
-                      'cyp450',
-                      'phaseII',
-                      'hgut',
-                      'superbio',
+           btType = c('superbio',
                       'allHuman',
                       'envimicro'),
            ismiles = NULL,
@@ -62,21 +58,15 @@ biotransformer <-
       stop('REST API interface not yet implemented, must use properly installed jar file.')
     } else {
       jar <- normalizePath(path = jar, mustWork = T)
-      csvoutput <- tempfile(pattern = 'file')
-      on.exit(unlink(csvoutput))
+      csvoutput <- paste0(tempfile(pattern = 'file'), '.csv')
       arguments <- paste(
-        '-jar',
-        jar,
-        '-k',
-        task,
-        '-b',
-        btType,
+        '-jar',jar,
+        '-k',task,
+        '-b',btType,
         '-ismi',
         paste0('"', ismiles, '"'),
-        '-ocsv',
-        csvoutput,
-        '-s',
-        nsteps
+        '-ocsv',csvoutput,
+        '-s',nsteps
       )
       if (!is.null(masses)) {
         arguments <-
@@ -92,9 +82,8 @@ biotransformer <-
       std_out <- system2(command = 'java',
                          args = arguments,
                          stdout = T)
-
-      message(paste0(std_out, '\n'))
       if (any(grepl('Successfully completed metabolism', std_out))) {
+        message(paste0(std_out, '\n'))
         rst <- readr::read_csv(file = csvoutput)
       } else {
         stop(paste0('Biotransformer failed for input: ', ismiles, sep = ''))
