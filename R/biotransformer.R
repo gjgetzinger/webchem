@@ -54,7 +54,7 @@ biotransformer <-
     if (is.null(ismiles)) {
       stop('No input SMILES string provided')
     }
-    if(task == 'pred' & all(is.null(c(masses, formulas)))){
+    if(task == 'cid' & all(is.null(c(masses, formulas)))){
       stop('Must provide masses or formulas when task = cid')
     }
     if (is.null(jar)) {
