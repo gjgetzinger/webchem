@@ -4,14 +4,22 @@
 \alias{biotransformer}
 \title{BioTransformer}
 \usage{
-biotransformer(jar = NULL, annotate = FALSE, btType = NULL,
-  ismiles = NULL, task = NULL, formulas = NULL, masses = NULL,
-  nsteps = 1, mTolerence = 0.01)
+biotransformer(
+  jar = NULL,
+  annotate = FALSE,
+  btType = NULL,
+  ismiles = NULL,
+  task = NULL,
+  formulas = NULL,
+  masses = NULL,
+  nsteps = 1,
+  mTolerence = 0.01
+)
 }
 \arguments{
 \item{jar}{Path to the biotransformer jar file}
 
-\item{annotate}{(T/F) Search PuChem for each product, and store with CID and
+\item{annotate}{(T/F) Search PubChem for each product, and store with CID and
 synonyms, when available.}
 
 \item{btType}{The type of description: Type of biotransformer

@@ -13,7 +13,7 @@
 #' Cheminformatics 201911:2; DOI: 10.1186/s13321-018-0324-5.
 #'
 #' @param jar Path to the biotransformer jar file
-#' @param annotate (T/F) Search PuChem for each product, and store with CID and
+#' @param annotate (T/F) Search PubChem for each product, and store with CID and
 #'   synonyms, when available.
 #' @param btType The type of description: Type of biotransformer
 #'   human super transformer (`superbio`, or `allHuman`), Environmental
@@ -60,33 +60,20 @@ biotransformer <-
     }
     if (is.null(jar)) {
       # TODO add REST API interface
-      stop('REST API interface not yet implemented, must use properly installed jar file.')
-      task_type <- switch(task, pred = 'PREDICTION', cid = 'IDENTIFICATION')
-      biotransformer_option <- switch(btType, env ='ENVMICRO', allHuman = 'ALLHUMAN', superbio = 'SUPERBIO')
-      query_input <- paste0('x\t', ismiles)
-      url <- 'http://biotransformer.ca/queries.json'
-      headers <- c('Content-Type' = 'json', Accept = 'json')
-      body <- jsonlite::toJSON(list(
-        biotransformer_option = biotransformer_option,
-        number_of_steps = nsteps,
-        query_input = query_input,
-        task_type = task_type
-      ), auto_unbox = T)
-
-      postres <- httr::POST(url = url,
-                  httr::add_headers(headers = headers),
-                  body = body)
-
-      query_id <- jsonlite::fromJSON(rawToChar(postres$content))$queryId
-      getstatus <- httr::GET(
-        url = paste0(
-          "https://api.rsc.org/compounds/v1/filter/",
-          query_id, "/status"
-        ),
-        httr::add_headers(.headers = headers)
-      )
-      cont_txt <- content(cont, type = 'text', encoding = 'UTF-8')
-
+      stop('POST API interface not yet implemented, must use properly installed jar file.')
+      # x_url <- 'http://biotransformer.ca/queries.json'
+      # task_type <- switch(task, pred = 'PREDICTION', cid = 'IDENTIFICATION')
+      # biotransformer_option <- switch(btType, env ='ENVMICRO', allHuman = 'ALLHUMAN', superbio = 'SUPERBIO')
+      # query_input <- paste0('x\t', ismiles)
+      #
+      # body <- jsonlite::toJSON(list(
+      #   biotransformer_option = biotransformer_option,
+      #   number_of_steps = nsteps,
+      #   query_input = query_input,
+      #   task_type = task_type
+      # ), auto_unbox = T)
+      # r <- httr::POST(x_url, body = body, encode = 'json', verbose())
+      #
     } else {
       jar <- normalizePath(path = jar, mustWork = T)
       csvoutput <- tempfile(tmpdir = getwd(), fileext = '.csv')
@@ -113,13 +100,12 @@ biotransformer <-
       }
       std_out <- system2(command = 'java',
                          args = arguments, stdout = T)
-      on.exit(file.remove(csvoutput))
-      if (any(grepl('Successfully completed metabolism', std_out))) {
-        rst <- readr::read_csv(file = csvoutput, col_types = "ccccicdddddccccccccccdd")
-      } else {
+      if(any(grepl('^The results were saved to the following file', std_out))) {
+        rst <-
+            readr::read_csv(file = csvoutput, col_types = "ccccicdddddccccccccccdd")
+        } else {
         stop(paste0('Biotransformer failed for input: ', ismiles, sep = ''))
       }
     }
-
   return(rst)
   }
