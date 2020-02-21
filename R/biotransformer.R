@@ -20,6 +20,10 @@
 #'   microbial(`env`).
 #' @param formulas Semicolon-separated list of formulas of compounds to identify
 #' @param ismiles The input, which can be a SMILES string
+#' @param molinput A filename for the input mol file (default = NULL).
+#' @param sdfinput A filename for the input sdf file (default = NULL).
+#' @param csvoutput A filename for the output csv file (default = NULL).
+#' @param sdfoutput A filename for the output sdf file (default = NULL).
 #' @param task The task to be permed: pred for prediction, or cid for compound
 #'   identification
 #' @param masses Semicolon-separated list of masses of compounds to identify
@@ -29,7 +33,7 @@
 #' @param mTolerence Mass tolerance for metabolite identification (default is
 #'   0.01).
 #'
-#' @return A tibble containing predicted metabolite data
+#' @return A path to the output file containing predicted metabolite data
 #' @export
 #'
 biotransformer <-
@@ -41,13 +45,18 @@ biotransformer <-
            formulas = NULL,
            masses = NULL,
            nsteps = 1,
-           mTolerence = 0.01) {
+           mTolerence = 0.01,
+           csvoutput = NULL,
+           sdfoutput = NULL,
+           molinput = NULL,
+           sdfinput = NULL
+           ) {
     # Check input arguments
-    if (is.null(ismiles)) {
-      stop('No input SMILES string provided')
+    if (is.null(ismiles) & is.null(molinput) & is.null(sdfinput)) {
+      stop('No input SMILES string or structure file provided.')
     }
     if(is.null(task) | !any(task %in% c('pred', 'cid'))){
-      stop('tak must be either pred or cid')
+      stop('task must be either pred or cid')
     }
     if(is.null(btType) | !any(btType %in% c('env', 'allHuman', 'superbio'))){
       stop('btType must be one of: env, allHuman or superbio')
@@ -55,8 +64,11 @@ biotransformer <-
     if(task == 'cid' & all(is.null(c(masses, formulas)))){
       stop('Must provide masses or formulas when task = cid')
     }
-    if(length(ismiles)>1){
+    if(!is.null(ismiles) & length(ismiles)>1){
       stop('Multiple SMILES strings input, only single queries currenty supported.')
+    }
+    if( is.null(csvoutput) & is.null(sdfoutput)){
+      stop('Must provide an output file name (.csv or .sdf). ')
     }
     if (is.null(jar)) {
       # TODO add REST API interface
@@ -76,15 +88,29 @@ biotransformer <-
       #
     } else {
       jar <- normalizePath(path = jar, mustWork = T)
-      csvoutput <- tempfile(tmpdir = getwd(), fileext = '.csv')
-
+      out_type <- ifelse(is.null(csvoutput), '-osdf', '-ocsv')
+      out_file <- switch(
+        out_type,
+        '-osdf' = normalizePath(sdfoutput, mustWork = F),
+        '-ocsv' = normalizePath(csvoutput, mustWork = F)
+      )
+      in_type <-
+        ifelse(!is.null(sdfinput),
+               '-isdf',
+               ifelse(!is.null(molinput), '-imol', ifelse(!is.null(ismiles), '-ismi', stop(
+                 'Input type not recognized'
+               ))))
+      in_arg <- switch(in_type,
+                       '-ismi' = shQuote(string = ismiles),
+                       '-imol' = normalizePath(molinput, mustWork = T),
+                       '-isdf' = normalizePath(sdfinput, mustWork = T)
+                       )
       arguments <- paste(
         '-jar',jar,
         '-k',task,
         '-b',btType,
-        '-ismi',
-        shQuote(string = ismiles),
-        '-ocsv',csvoutput,
+        in_type, in_arg,
+        out_type, out_file,
         '-s',nsteps
       )
       if (!is.null(masses)) {
@@ -98,14 +124,10 @@ biotransformer <-
       if (annotate) {
         arguments <- paste(arguments, '-a')
       }
-      std_out <- system2(command = 'java',
-                         args = arguments, stdout = T)
-      if(any(grepl('^The results were saved to the following file', std_out))) {
-        rst <-
-            readr::read_csv(file = csvoutput, col_types = "ccccicdddddccccccccccdd")
-        } else {
-        stop(paste0('Biotransformer failed for input: ', ismiles, sep = ''))
-      }
+      system2(command = 'java',
+              args = arguments,
+              stdout = T)
+      message(out_file)
+      return(out_file)
     }
-  return(rst)
   }

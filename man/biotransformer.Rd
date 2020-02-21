@@ -13,7 +13,11 @@ biotransformer(
   formulas = NULL,
   masses = NULL,
   nsteps = 1,
-  mTolerence = 0.01
+  mTolerence = 0.01,
+  csvoutput = NULL,
+  sdfoutput = NULL,
+  molinput = NULL,
+  sdfinput = NULL
 )
 }
 \arguments{
@@ -41,9 +45,17 @@ biotransformers. The default value is 1.}
 
 \item{mTolerence}{Mass tolerance for metabolite identification (default is
 0.01).}
+
+\item{csvoutput}{A filename for the output csv file (default = NULL).}
+
+\item{sdfoutput}{A filename for the output sdf file (default = NULL).}
+
+\item{molinput}{A filename for the input mol file (default = NULL).}
+
+\item{sdfinput}{A filename for the input sdf file (default = NULL).}
 }
 \value{
-A tibble containing predicted metabolite data
+A path to the output file containing predicted metabolite data
 }
 \description{
 BioTransformer is a software
